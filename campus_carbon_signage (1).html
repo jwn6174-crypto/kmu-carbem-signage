@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캠퍼스 통근 탄소배출 사이니지</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --ink: #2c2c2a;
+    --muted: #5f5e5a;
+    --hint: #888780;
+    --line: rgba(120,118,108,0.25);
+    --accent: #534ab7;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 28px 22px 48px;
+  }
+  header { margin-bottom: 22px; }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--hint);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .lede {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 620px;
+  }
+
+  /* ---- Tabs ---- */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0 18px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1;
+    min-width: 200px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .18s, transform .12s, box-shadow .18s;
+    font-family: inherit;
+  }
+  .tab:hover { border-color: rgba(83,74,183,0.4); }
+  .tab:active { transform: scale(0.99); }
+  .tab.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .tab-row { display: flex; align-items: center; gap: 10px; }
+  .tab-dot {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .tab-dot svg { width: 17px; height: 17px; }
+  .tab-name { font-size: 14px; font-weight: 500; }
+  .tab-desc {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  /* ---- Panels ---- */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fade .3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 480;
+    background: #cfe3ee;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @supports not (aspect-ratio: 1) {
+    .stage { height: 0; padding-bottom: 60%; }
+  }
+
+  /* ---- Controls ---- */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 6px;
+  }
+  .controls label {
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 74px;
+  }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #d8d5cc;
+    border-radius: 4px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+  .readout {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 56px;
+    text-align: right;
+  }
+  .caption {
+    font-size: 12px;
+    color: var(--hint);
+    margin-top: 4px;
+    line-height: 1.6;
+  }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--hint);
+    line-height: 1.7;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <p class="eyebrow">우리 학교 통근 탄소배출 캠페인</p>
+    <h1>매일 쌓이는 통근 탄소를 보여주는 사이니지</h1>
+    <p class="lede">학교 구성원의 통근 차량이 배출하는 탄소가 매일 쌓이는 모습을 세 가지 방식으로 시각화했습니다. 아래에서 보고 싶은 버전을 선택하세요.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-panel="heat" role="tab" aria-selected="true">
+      <div class="tab-row">
+        <span class="tab-dot" style="background:#faeeda;color:#854f0b;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </span>
+        <span class="tab-name">유리병 · 폭염</span>
+      </div>
+      <p class="tab-desc">탄소가 쌓일수록 캠퍼스가 점점 뜨거워지는 폭염 시나리오</p>
+    </button>
+
+    <button class="tab" data-panel="split" role="tab" aria-selected="false">
+      <div class="tab-row">
+        <span class="tab-dot" style="background:#e6f1fb;color:#0c447c;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M7 8l-3 4 3 4"/><path d="M17 8l3 4-3 4"/></svg>
+        </span>
+        <span class="tab-name">유리병 · 가뭄과 홍수</span>
+      </div>
+      <p class="tab-desc">날씨가 가뭄과 홍수, 양쪽 극단으로 갈라지는 시나리오</p>
+    </button>
+
+    <button class="tab" data-panel="trees" role="tab" aria-selected="false">
+      <div class="tab-row">
+        <span class="tab-dot" style="background:#eaf3de;color:#3b6d11;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 3-3 6"/><path d="M12 2a5 5 0 0 1 5 5c0 3-5 5-5 9"/></svg>
+        </span>
+        <span class="tab-name">필요한 나무</span>
+      </div>
+      <p class="tab-desc">배출량을 흡수하는 데 필요한 나무가 늘어나는 시나리오</p>
+    </button>
+  </div>
+
+  <!-- ============ PANEL 1: HEATWAVE ============ -->
+  <section class="panel active" id="panel-heat">
+    <h2 class="sr-only">통근 차량 탄소가 유리병에 쌓일수록 폭염이 심해지는 사이니지</h2>
+    <div class="stage">
+      <svg viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">
+        <defs>
+          <linearGradient id="hbg" x1="0" y1="0" x2="0" y2="1">
+            <stop id="hbgT" offset="0%" stop-color="#bcdcee"/>
+            <stop id="hbgM" offset="52%" stop-color="#dde9e0"/>
+            <stop id="hbgB" offset="100%" stop-color="#ece5d4"/>
+          </linearGradient>
+          <radialGradient id="sunHalo" cx="50%" cy="50%" r="50%">
+            <stop id="haloIn" offset="0%" stop-color="#fff0c4"/>
+            <stop offset="100%" stop-color="#fff0c4" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="800" height="480" fill="url(#hbg)"/>
+        <circle id="sunHaloC" cx="135" cy="105" r="110" fill="url(#sunHalo)"/>
+        <g id="rays" stroke="#ffce4a" stroke-width="5" stroke-linecap="round" opacity="0"></g>
+        <circle id="sunBody" cx="135" cy="105" r="40" fill="#ffd24a"/>
+        <g id="heatWaves" opacity="0"></g>
+        <path id="hHill" d="M0 300 Q400 276 800 300 L800 360 L0 360 Z" fill="#a7b277"/>
+        <g id="buildings">
+          <rect x="430" y="208" width="74" height="112" fill="#b4a892"/>
+          <rect x="520" y="180" width="58" height="140" fill="#c2b6a0"/>
+          <rect x="592" y="232" width="88" height="88" fill="#a99d88"/>
+          <rect x="694" y="200" width="62" height="120" fill="#bcb09a"/>
+          <g fill="#8a7f6a" opacity="0.6">
+            <rect x="442" y="222" width="11" height="14"/><rect x="462" y="222" width="11" height="14"/><rect x="482" y="222" width="11" height="14"/>
+            <rect x="442" y="248" width="11" height="14"/><rect x="462" y="248" width="11" height="14"/><rect x="482" y="248" width="11" height="14"/>
+            <rect x="442" y="274" width="11" height="14"/><rect x="462" y="274" width="11" height="14"/><rect x="482" y="274" width="11" height="14"/>
+            <rect x="532" y="196" width="11" height="15"/><rect x="552" y="196" width="11" height="15"/>
+            <rect x="532" y="224" width="11" height="15"/><rect x="552" y="224" width="11" height="15"/>
+            <rect x="532" y="252" width="11" height="15"/><rect x="552" y="252" width="11" height="15"/>
+            <rect x="606" y="248" width="12" height="15"/><rect x="628" y="248" width="12" height="15"/><rect x="650" y="248" width="12" height="15"/>
+            <rect x="606" y="276" width="12" height="15"/><rect x="628" y="276" width="12" height="15"/><rect x="650" y="276" width="12" height="15"/>
+            <rect x="706" y="216" width="11" height="14"/><rect x="726" y="216" width="11" height="14"/>
+            <rect x="706" y="244" width="11" height="14"/><rect x="726" y="244" width="11" height="14"/>
+          </g>
+        </g>
+        <rect x="0" y="320" width="800" height="160" fill="#7d7468"/>
+        <line x1="0" y1="320" x2="800" y2="320" stroke="#5f574c" stroke-width="3"/>
+        <g id="laneMarks" stroke="#e8e0cc" stroke-width="5"></g>
+        <g id="cars"></g>
+        <g id="cracks" opacity="0" stroke="#5a5246" stroke-width="2.5" fill="none"></g>
+      </svg>
+
+      <div style="position:absolute;top:28px;left:300px;right:228px;z-index:3;">
+        <p id="hKick" style="margin:0;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:#5a5750;transition:color .4s;">우리 학교 통근 차량이 매일 배출하는 탄소</p>
+        <p id="hHead" style="margin:9px 0 0;font-size:24px;font-weight:500;line-height:1.34;color:#2c2c2a;transition:color .4s;">병에 쌓일수록<br>캠퍼스가 뜨거워집니다</p>
+      </div>
+
+      <div style="position:absolute;left:30px;bottom:30px;z-index:3;">
+        <div style="display:flex;gap:26px;align-items:flex-end;">
+          <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:10px 16px;">
+            <p style="margin:0;font-size:11px;color:#5a5750;">통근 배출 학기 누적</p>
+            <p style="margin:3px 0 0;font-size:38px;font-weight:500;line-height:0.95;color:#993c1d;"><span id="hTons">0</span><span style="font-size:15px;"> t</span></p>
+          </div>
+          <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:10px 16px;">
+            <p style="margin:0;font-size:11px;color:#5a5750;">캠퍼스 체감 기온</p>
+            <p style="margin:3px 0 0;font-size:30px;font-weight:500;line-height:1;color:#d85a30;"><span id="hTemp">21</span>°C</p>
+          </div>
+        </div>
+        <p id="hMsg" style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#3f3a32;max-width:330px;background:rgba(255,255,255,0.66);padding:8px 12px;border-radius:8px;">
+          등하교 차량이 내뿜은 탄소가 열을 가둡니다. 모래가 높아질수록 캠퍼스의 여름이 길어집니다.
+        </p>
+      </div>
+
+      <div style="position:absolute;right:28px;bottom:22px;width:236px;z-index:3;">
+        <svg viewBox="0 0 220 360" style="width:100%;height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.2));">
+          <defs>
+            <clipPath id="jc2"><path d="M62 92 Q62 80 74 76 L86 71 L86 50 Q86 42 94 42 L126 42 Q134 42 134 50 L134 71 L146 76 Q158 80 158 92 L158 318 Q158 336 140 336 L80 336 Q62 336 62 318 Z"/></clipPath>
+            <linearGradient id="sand2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e88a3c"/><stop offset="100%" stop-color="#7a2d10"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="110" cy="348" rx="56" ry="9" fill="rgba(0,0,0,0.16)"/>
+          <path d="M62 92 Q62 80 74 76 L86 71 L86 50 Q86 42 94 42 L126 42 Q134 42 134 50 L134 71 L146 76 Q158 80 158 92 L158 318 Q158 336 140 336 L80 336 Q62 336 62 318 Z" fill="rgba(255,255,255,0.5)" stroke="rgba(70,66,58,0.85)" stroke-width="2.5"/>
+          <g clip-path="url(#jc2)">
+            <rect id="s2" x="55" y="336" width="110" height="0" fill="url(#sand2)"/>
+            <path id="s2w" d="" fill="#f0a050" opacity="0.9"/>
+          </g>
+          <g id="s2ticks"></g>
+          <g id="s2fall"></g>
+          <path d="M62 92 Q62 80 74 76 L86 71 L86 50 Q86 42 94 42 L126 42 Q134 42 134 50 L134 71 L146 76 Q158 80 158 92 L158 318 Q158 336 140 336 L80 336 Q62 336 62 318 Z" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.2"/>
+          <rect x="74" y="104" width="7" height="200" rx="3.5" fill="rgba(255,255,255,0.42)"/>
+          <ellipse cx="110" cy="46" rx="24" ry="6" fill="rgba(255,255,255,0.6)" stroke="rgba(70,66,58,0.85)" stroke-width="2"/>
+        </svg>
+        <p style="margin:5px 0 0;text-align:center;font-size:12px;color:#3a3a36;font-weight:500;"><span id="h2pct">0</span>% 채워짐 · 학기 누적</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="hday">학기 진행</label>
+      <input type="range" min="0" max="105" value="46" step="1" id="hday">
+      <span class="readout" id="hdayout">46일차</span>
+    </div>
+    <p class="caption">캠퍼스 도로의 통근 차량이 내뿜은 탄소가 병에 쌓이고, 모래가 높아질수록 폭염이 심해집니다.</p>
+  </section>
+
+  <!-- ============ PANEL 2: DROUGHT / FLOOD ============ -->
+  <section class="panel" id="panel-split">
+    <h2 class="sr-only">통근 탄소가 유리병에 쌓일수록 캠퍼스 한쪽은 가뭄, 한쪽은 홍수로 갈라지는 사이니지</h2>
+    <div class="stage">
+      <svg viewBox="0 0 800 490" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">
+        <defs>
+          <clipPath id="leftHalf"><rect x="0" y="0" width="400" height="490"/></clipPath>
+          <clipPath id="rightHalf"><rect x="400" y="0" width="400" height="490"/></clipPath>
+          <linearGradient id="dSky" x1="0" y1="0" x2="0" y2="1">
+            <stop id="dSkyT" offset="0%" stop-color="#bcdcee"/>
+            <stop id="dSkyB" offset="100%" stop-color="#e6ecd6"/>
+          </linearGradient>
+          <linearGradient id="fSky" x1="0" y1="0" x2="0" y2="1">
+            <stop id="fSkyT" offset="0%" stop-color="#bcdcee"/>
+            <stop id="fSkyB" offset="100%" stop-color="#e6ecd6"/>
+          </linearGradient>
+          <radialGradient id="dSunG" cx="50%" cy="50%" r="50%">
+            <stop id="dSunIn" offset="0%" stop-color="#ffe9a0"/>
+            <stop offset="100%" stop-color="#ffe9a0" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <g clip-path="url(#leftHalf)">
+          <rect x="0" width="400" height="490" fill="url(#dSky)"/>
+          <circle id="dSunHalo" cx="64" cy="92" r="76" fill="url(#dSunG)"/>
+          <g id="dRays" stroke="#ffcf52" stroke-width="4" stroke-linecap="round" opacity="0"></g>
+          <circle id="dSun" cx="64" cy="92" r="30" fill="#ffd863" opacity="0"/>
+          <g id="dHeat" opacity="0"></g>
+          <g id="dCampus">
+            <rect x="150" y="120" width="78" height="150" fill="#9fb0c4"/>
+            <rect x="150" y="120" width="78" height="14" fill="#8a9bb0"/>
+            <rect x="183" y="104" width="12" height="16" fill="#7a8a9e"/>
+            <circle cx="189" cy="100" r="7" fill="#cdbf9a"/>
+            <g fill="#6f7f96" opacity="0.6">
+              <rect x="158" y="140" width="12" height="13"/><rect x="176" y="140" width="12" height="13"/><rect x="194" y="140" width="12" height="13"/><rect x="212" y="140" width="9" height="13"/>
+              <rect x="158" y="162" width="12" height="13"/><rect x="176" y="162" width="12" height="13"/><rect x="194" y="162" width="12" height="13"/><rect x="212" y="162" width="9" height="13"/>
+              <rect x="158" y="184" width="12" height="13"/><rect x="176" y="184" width="12" height="13"/><rect x="194" y="184" width="12" height="13"/><rect x="212" y="184" width="9" height="13"/>
+              <rect x="158" y="206" width="12" height="13"/><rect x="176" y="206" width="12" height="13"/><rect x="194" y="206" width="12" height="13"/><rect x="212" y="206" width="9" height="13"/>
+              <rect x="158" y="228" width="12" height="13"/><rect x="176" y="228" width="12" height="13"/><rect x="194" y="228" width="12" height="13"/><rect x="212" y="228" width="9" height="13"/>
+            </g>
+            <path d="M30 270 L30 224 L70 206 L110 224 L110 270 Z" fill="#c4b59a"/>
+            <path d="M268 270 L268 224 L308 206 L348 224 L348 270 Z" fill="#c4b59a"/>
+            <g fill="#8a7f6a" opacity="0.55">
+              <rect x="40" y="232" width="11" height="12"/><rect x="58" y="226" width="11" height="12"/><rect x="76" y="232" width="11" height="12"/><rect x="92" y="238" width="11" height="12"/>
+              <rect x="40" y="250" width="11" height="12"/><rect x="58" y="250" width="11" height="12"/><rect x="76" y="250" width="11" height="12"/><rect x="92" y="252" width="11" height="12"/>
+              <rect x="278" y="232" width="11" height="12"/><rect x="296" y="226" width="11" height="12"/><rect x="314" y="232" width="11" height="12"/><rect x="330" y="238" width="11" height="12"/>
+              <rect x="278" y="250" width="11" height="12"/><rect x="296" y="250" width="11" height="12"/><rect x="314" y="250" width="11" height="12"/><rect x="330" y="252" width="11" height="12"/>
+            </g>
+          </g>
+          <path id="dGround" d="M0 270 Q200 258 400 270 L400 490 L0 490 Z" fill="#86995a"/>
+          <g id="dCracks" stroke="#9c8a5a" stroke-width="2.5" fill="none" opacity="0"></g>
+          <g id="dDust" opacity="0"></g>
+          <g id="dPlant"></g>
+        </g>
+
+        <g clip-path="url(#rightHalf)">
+          <rect x="400" width="400" height="490" fill="url(#fSky)"/>
+          <g id="fClouds" opacity="0"></g>
+          <g id="fCampus">
+            <rect x="550" y="120" width="78" height="150" fill="#9fb0c4"/>
+            <rect x="550" y="120" width="78" height="14" fill="#8a9bb0"/>
+            <rect x="583" y="104" width="12" height="16" fill="#7a8a9e"/>
+            <circle cx="589" cy="100" r="7" fill="#cdbf9a"/>
+            <g fill="#6f7f96" opacity="0.6">
+              <rect x="558" y="140" width="12" height="13"/><rect x="576" y="140" width="12" height="13"/><rect x="594" y="140" width="12" height="13"/><rect x="612" y="140" width="9" height="13"/>
+              <rect x="558" y="162" width="12" height="13"/><rect x="576" y="162" width="12" height="13"/><rect x="594" y="162" width="12" height="13"/><rect x="612" y="162" width="9" height="13"/>
+              <rect x="558" y="184" width="12" height="13"/><rect x="576" y="184" width="12" height="13"/><rect x="594" y="184" width="12" height="13"/><rect x="612" y="184" width="9" height="13"/>
+              <rect x="558" y="206" width="12" height="13"/><rect x="576" y="206" width="12" height="13"/><rect x="594" y="206" width="12" height="13"/><rect x="612" y="206" width="9" height="13"/>
+              <rect x="558" y="228" width="12" height="13"/><rect x="576" y="228" width="12" height="13"/><rect x="594" y="228" width="12" height="13"/><rect x="612" y="228" width="9" height="13"/>
+            </g>
+            <path d="M430 270 L430 224 L470 206 L510 224 L510 270 Z" fill="#c4b59a"/>
+            <path d="M668 270 L668 224 L708 206 L748 224 L748 270 Z" fill="#c4b59a"/>
+            <g fill="#8a7f6a" opacity="0.55">
+              <rect x="440" y="232" width="11" height="12"/><rect x="458" y="226" width="11" height="12"/><rect x="476" y="232" width="11" height="12"/><rect x="492" y="238" width="11" height="12"/>
+              <rect x="440" y="250" width="11" height="12"/><rect x="458" y="250" width="11" height="12"/><rect x="476" y="250" width="11" height="12"/><rect x="492" y="252" width="11" height="12"/>
+              <rect x="678" y="232" width="11" height="12"/><rect x="696" y="226" width="11" height="12"/><rect x="714" y="232" width="11" height="12"/><rect x="730" y="238" width="11" height="12"/>
+              <rect x="678" y="250" width="11" height="12"/><rect x="696" y="250" width="11" height="12"/><rect x="714" y="250" width="11" height="12"/><rect x="730" y="252" width="11" height="12"/>
+            </g>
+          </g>
+          <g id="fRain" stroke="#5b86b8" stroke-width="2" stroke-linecap="round" opacity="0"></g>
+          <path id="fGround" d="M400 270 Q600 258 800 270 L800 490 L400 490 Z" fill="#86995a"/>
+          <g id="fPlant"></g>
+          <rect id="fWater" x="400" y="490" width="400" height="0" fill="#4f7fa8" opacity="0.8"/>
+          <path id="fWaveLine" d="" stroke="#86add0" stroke-width="3" fill="none" opacity="0"/>
+        </g>
+
+        <line x1="400" y1="0" x2="400" y2="490" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-dasharray="6 6"/>
+      </svg>
+
+      <div style="position:absolute;top:22px;left:0;right:0;text-align:center;z-index:3;">
+        <p style="margin:0;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:#4a4a44;">우리 학교 통근 차량 탄소가 병에 쌓일수록</p>
+        <p style="margin:7px 0 0;font-size:22px;font-weight:500;color:#2c2c2a;">날씨는 양쪽 극단으로 갈라집니다</p>
+      </div>
+
+      <div style="position:absolute;top:84px;left:26px;z-index:3;">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.85);padding:6px 12px;border-radius:8px;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#b06a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M20 12h2M19.07 4.93l-1.41 1.41M16 12a4 4 0 1 0-8 0"/><path d="M3 18h18M3 22h18"/></svg>
+          <span style="font-size:13px;font-weight:500;color:#7a4a10;">극심한 가뭄</span>
+        </div>
+      </div>
+      <div style="position:absolute;top:84px;right:26px;z-index:3;text-align:right;">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.85);padding:6px 12px;border-radius:8px;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="#1f5fa5" stroke="#1f5fa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5C12 2.5 5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg>
+          <span style="font-size:13px;font-weight:500;color:#0c447c;">홍수</span>
+        </div>
+      </div>
+
+      <div style="position:absolute;left:26px;bottom:28px;z-index:3;">
+        <p style="margin:0;font-size:11px;color:#7a4a10;">강수량 · 평년 대비</p>
+        <p style="margin:3px 0 0;font-size:30px;font-weight:500;line-height:1;color:#b06a1a;"><span id="dRainfall">100</span><span style="font-size:13px;">%</span></p>
+      </div>
+      <div style="position:absolute;right:26px;bottom:28px;z-index:3;text-align:right;">
+        <p style="margin:0;font-size:11px;color:#0c447c;">강수량 · 평년 대비</p>
+        <p style="margin:3px 0 0;font-size:30px;font-weight:500;line-height:1;color:#1f5fa5;"><span id="fRainfall">100</span><span style="font-size:13px;">%</span></p>
+      </div>
+
+      <div style="position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:230px;z-index:4;">
+        <svg viewBox="0 0 220 320" style="width:100%;height:auto;filter:drop-shadow(0 5px 12px rgba(0,0,0,0.24));">
+          <defs>
+            <clipPath id="jc3"><path d="M62 82 Q62 70 74 66 L86 61 L86 42 Q86 35 94 35 L126 35 Q134 35 134 42 L134 61 L146 66 Q158 70 158 82 L158 282 Q158 298 142 298 L78 298 Q62 298 62 282 Z"/></clipPath>
+            <linearGradient id="sand3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6b62c4"/><stop offset="100%" stop-color="#26215c"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="110" cy="308" rx="52" ry="8" fill="rgba(0,0,0,0.2)"/>
+          <path d="M62 82 Q62 70 74 66 L86 61 L86 42 Q86 35 94 35 L126 35 Q134 35 134 42 L134 61 L146 66 Q158 70 158 82 L158 282 Q158 298 142 298 L78 298 Q62 298 62 282 Z" fill="rgba(255,255,255,0.55)" stroke="rgba(70,66,58,0.9)" stroke-width="2.5"/>
+          <g clip-path="url(#jc3)">
+            <rect id="s3" x="55" y="298" width="110" height="0" fill="url(#sand3)"/>
+            <path id="s3w" d="" fill="#7b73d4" opacity="0.9"/>
+          </g>
+          <g id="s3ticks"></g>
+          <g id="s3fall"></g>
+          <path d="M62 82 Q62 70 74 66 L86 61 L86 42 Q86 35 94 35 L126 35 Q134 35 134 42 L134 61 L146 66 Q158 70 158 82 L158 282 Q158 298 142 298 L78 298 Q62 298 62 282 Z" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.2"/>
+          <ellipse cx="110" cy="38" rx="24" ry="6" fill="rgba(255,255,255,0.65)" stroke="rgba(70,66,58,0.9)" stroke-width="2"/>
+        </svg>
+        <p style="margin:5px 0 0;text-align:center;font-size:12px;color:#2c2c2a;font-weight:500;"><span id="d3pct">0</span>% 채워짐 · 통근 배출 누적</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="d3day">학기 진행</label>
+      <input type="range" min="0" max="105" value="46" step="1" id="d3day">
+      <span class="readout" id="d3dayout">46일차</span>
+    </div>
+    <p class="caption">같은 캠퍼스 풍경에서 시작해 왼쪽은 가뭄으로 메마르고, 오른쪽은 강수가 늘어 침수됩니다.</p>
+  </section>
+
+  <!-- ============ PANEL 3: TREES NEEDED ============ -->
+  <section class="panel" id="panel-trees">
+    <h2 class="sr-only">통근 탄소배출량을 흡수하는 데 필요한 나무가 땅 위에 점점 늘어나는 사이니지</h2>
+    <div class="stage">
+      <svg viewBox="0 0 800 470" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">
+        <defs>
+          <linearGradient id="tbg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#cfe6ee"/>
+            <stop offset="100%" stop-color="#eaeed9"/>
+          </linearGradient>
+          <linearGradient id="fieldG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#9aac6c"/>
+            <stop offset="100%" stop-color="#76884c"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="470" fill="url(#tbg)"/>
+        <circle cx="660" cy="86" r="38" fill="#ffe27a" opacity="0.9"/>
+        <g id="bgBuildings">
+          <rect x="60" y="168" width="58" height="98" fill="#bcb09a"/>
+          <rect x="130" y="142" width="46" height="124" fill="#c6baa4"/>
+          <rect x="188" y="186" width="68" height="80" fill="#b0a48e"/>
+          <g fill="#8a7f6a" opacity="0.5">
+            <rect x="70" y="182" width="8" height="11"/><rect x="84" y="182" width="8" height="11"/><rect x="98" y="182" width="8" height="11"/>
+            <rect x="70" y="202" width="8" height="11"/><rect x="84" y="202" width="8" height="11"/><rect x="98" y="202" width="8" height="11"/>
+            <rect x="139" y="156" width="8" height="11"/><rect x="153" y="156" width="8" height="11"/>
+            <rect x="139" y="176" width="8" height="11"/><rect x="153" y="176" width="8" height="11"/>
+            <rect x="139" y="196" width="8" height="11"/><rect x="153" y="196" width="8" height="11"/>
+            <rect x="198" y="200" width="9" height="11"/><rect x="214" y="200" width="9" height="11"/><rect x="230" y="200" width="9" height="11"/>
+          </g>
+        </g>
+        <path d="M0 232 Q400 214 800 232 L800 470 L0 470 Z" fill="url(#fieldG)"/>
+        <path d="M0 232 Q400 214 800 232" stroke="#88996a" stroke-width="2" fill="none" opacity="0.5"/>
+        <g id="tScene"></g>
+      </svg>
+
+      <div style="position:absolute;top:26px;left:300px;right:36px;z-index:3;">
+        <p style="margin:0;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:#4a5a3a;">오늘 우리 학교 통근 차량 배출량</p>
+        <p style="margin:8px 0 0;font-size:23px;font-weight:500;line-height:1.34;color:#2c3320;">
+          이 탄소를 되돌리려면 <span id="needBig" style="color:#993c1d;">0</span>그루가<br>1년 내내 숨 쉬어야 합니다
+        </p>
+      </div>
+
+      <div style="position:absolute;left:30px;bottom:28px;z-index:3;">
+        <div style="display:flex;gap:13px;align-items:flex-end;margin-bottom:13px;">
+          <div style="background:rgba(255,255,255,0.85);border-radius:8px;padding:10px 16px;">
+            <p style="margin:0;font-size:11px;color:#5f6b4a;">필요한 나무</p>
+            <p style="margin:3px 0 0;font-size:32px;font-weight:500;line-height:1;color:#3b6d11;"><span id="needCount">0</span><span style="font-size:13px;"> 그루</span></p>
+          </div>
+          <div style="background:rgba(255,255,255,0.85);border-radius:8px;padding:10px 16px;">
+            <p style="margin:0;font-size:11px;color:#5f6b4a;">필요한 숲 면적</p>
+            <p style="margin:3px 0 0;font-size:32px;font-weight:500;line-height:1;color:#2c3320;"><span id="needArea">0</span><span style="font-size:13px;"> 개</span></p>
+            <p style="margin:1px 0 0;font-size:10px;color:#888780;" id="needAreaSub">농구장 기준</p>
+          </div>
+        </div>
+        <p id="tMsg" style="margin:0;font-size:13px;line-height:1.6;color:#3f4a30;max-width:340px;background:rgba(255,255,255,0.66);padding:7px 11px;border-radius:8px;">
+          등하교 차량 배출이 늘수록 그만큼 많은 나무가 1년 내내 우리 대신 숨 쉬어야 합니다.
+        </p>
+      </div>
+
+      <div style="position:absolute;right:28px;bottom:26px;z-index:3;background:rgba(255,255,255,0.86);border-radius:8px;padding:11px 15px;text-align:right;">
+        <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#3b6d11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3z"/><path d="M4 11h16"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+          <span style="font-size:13px;color:#2c3320;">대중교통 통근자 1명</span>
+        </div>
+        <p style="margin:6px 0 0;font-size:12px;color:#5f6b4a;">= 나무 <span style="color:#3b6d11;font-weight:500;">7그루</span>의 부담을 덜어줍니다</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="temit">오늘 배출량</label>
+      <input type="range" min="2" max="22" value="11" step="0.5" id="temit">
+      <span class="readout" id="temitout">11t</span>
+    </div>
+    <p class="caption">통근 배출량이 늘수록 캠퍼스 잔디밭에 심어야 할 나무가 늘어납니다 — 한 그루는 다수의 나무를 대표합니다.</p>
+  </section>
+
+  <footer>
+    표시되는 배출량·기온·강수량 수치는 학교 규모를 가정한 예시값입니다. 실제 배포 시에는 통근 설문 또는 주차 데이터, 그리고 기상청 기후변화 시나리오 값으로 교체하면 신뢰도가 높아집니다.
+  </footer>
+
+</div>
+
+<script>
+/* ============ TAB SWITCHING ============ */
+(function(){
+  var tabs = document.querySelectorAll('.tab');
+  var panels = {
+    heat: document.getElementById('panel-heat'),
+    split: document.getElementById('panel-split'),
+    trees: document.getElementById('panel-trees')
+  };
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      var key = tab.dataset.panel;
+      tabs.forEach(function(t){
+        var on = t === tab;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      Object.keys(panels).forEach(function(k){
+        panels[k].classList.toggle('active', k === key);
+      });
+    });
+  });
+})();
+
+/* ============ PANEL 1: HEATWAVE ============ */
+(function(){
+  var day=document.getElementById('hday');
+  var capTons=1490, totalDays=105;
+  var jarTop=44, jarBot=334, jarH=jarBot-jarTop;
+  var s2=document.getElementById('s2'), s2w=document.getElementById('s2w');
+  var fall=document.getElementById('s2fall'), rays=document.getElementById('rays');
+  var heat=document.getElementById('heatWaves'), cracks=document.getElementById('cracks');
+  var carsG=document.getElementById('cars'), ticks=document.getElementById('s2ticks');
+  var lanes=document.getElementById('laneMarks');
+
+  function L(a,b,p){return Math.round(a+(b-a)*p);}
+  function rgb(c){return 'rgb('+c[0]+','+c[1]+','+c[2]+')';}
+
+  var tk='';
+  for(var i=1;i<9;i++){
+    var ty=jarBot-(jarH*i/10);
+    var lng=(i%5===0);
+    tk+='<line x1="62" y1="'+ty+'" x2="'+(lng?'80':'73')+'" y2="'+ty+'" stroke="rgba(255,255,255,0.8)" stroke-width="'+(lng?2:1.3)+'"/>';
+    tk+='<line x1="'+(lng?'140':'147')+'" y1="'+ty+'" x2="158" y2="'+ty+'" stroke="rgba(255,255,255,0.8)" stroke-width="'+(lng?2:1.3)+'"/>';
+  }
+  ticks.innerHTML=tk;
+
+  for(var ln=0;ln<13;ln++){
+    var l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',ln*64);l.setAttribute('y1',400);
+    l.setAttribute('x2',ln*64+34);l.setAttribute('y2',400);
+    lanes.appendChild(l);
+  }
+
+  for(var s=0;s<7;s++){
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',104+Math.random()*12);
+    c.setAttribute('r',1.4+Math.random()*2);
+    c.setAttribute('fill','#e88a3c');
+    fall.appendChild(c);
+  }
+  var grains=fall.querySelectorAll('circle');
+
+  for(var k=0;k<8;k++){
+    var a=(k*45+22)*Math.PI/180;
+    var r1=document.createElementNS('http://www.w3.org/2000/svg','line');
+    r1.setAttribute('x1',135+Math.cos(a)*52);r1.setAttribute('y1',105+Math.sin(a)*52);
+    r1.setAttribute('x2',135+Math.cos(a)*74);r1.setAttribute('y2',105+Math.sin(a)*74);
+    rays.appendChild(r1);
+  }
+  for(var w=0;w<5;w++){
+    var hx=130+w*150;
+    var p1=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p1.setAttribute('d','M'+hx+' 318 q9 -16 0 -32 q-9 -16 0 -32');
+    p1.setAttribute('fill','none');p1.setAttribute('stroke','#f0c98a');p1.setAttribute('stroke-width','3');
+    heat.appendChild(p1);
+  }
+  ['M60 470 l46 -28 l40 24 M280 472 l48 -30 l36 26 M520 468 l44 -26 l40 24','M170 478 l40 -30 M400 478 l44 -32 M620 474 l36 -26'].forEach(function(d){
+    var cp=document.createElementNS('http://www.w3.org/2000/svg','path');
+    cp.setAttribute('d',d);cracks.appendChild(cp);
+  });
+
+  function car(x,y,col,sc){
+    var g='<g transform="translate('+x+','+y+') scale('+sc+')">';
+    g+='<ellipse cx="0" cy="20" rx="46" ry="7" fill="rgba(0,0,0,0.18)"/>';
+    g+='<rect x="-44" y="-2" width="88" height="22" rx="6" fill="'+col+'"/>';
+    g+='<path d="M-30 -2 Q-24 -22 -6 -22 L20 -22 Q34 -22 38 -2 Z" fill="'+col+'"/>';
+    g+='<path d="M-25 -4 Q-21 -17 -7 -17 L4 -17 L4 -4 Z" fill="#cfe4f0" opacity="0.9"/>';
+    g+='<path d="M8 -4 L8 -17 L17 -17 Q28 -17 32 -4 Z" fill="#cfe4f0" opacity="0.9"/>';
+    g+='<circle cx="-26" cy="20" r="11" fill="#2c2c2a"/><circle cx="-26" cy="20" r="4.5" fill="#888780"/>';
+    g+='<circle cx="27" cy="20" r="11" fill="#2c2c2a"/><circle cx="27" cy="20" r="4.5" fill="#888780"/>';
+    g+='<ellipse cx="-50" cy="14" rx="7" ry="6" fill="#3a3a36" class="puff" opacity="0"/>';
+    g+='<ellipse cx="-60" cy="9" rx="9" ry="8" fill="#4a4a44" class="puff" opacity="0"/>';
+    g+='</g>';
+    return g;
+  }
+
+  function render(){
+    var d=+day.value;
+    document.getElementById('hdayout').textContent=d+'일차';
+    var p=d/totalDays;
+
+    var h=p*jarH, topY=jarBot-h;
+    s2.setAttribute('y',topY); s2.setAttribute('height',h);
+    if(h>3){
+      s2w.setAttribute('d','M55 '+topY+' Q82 '+(topY-7)+' 110 '+topY+' Q138 '+(topY+7)+' 165 '+topY+' L165 '+(topY+10)+' L55 '+(topY+10)+' Z');
+      s2w.setAttribute('opacity','0.9');
+    } else s2w.setAttribute('opacity','0');
+    grains.forEach(function(g){
+      var gy=jarTop+14+Math.random()*(topY-jarTop-16);
+      g.setAttribute('cy',gy>jarTop?gy:jarTop+14);
+      g.setAttribute('opacity', d>0&&d<totalDays?(0.45+Math.random()*0.5).toFixed(2):'0');
+    });
+
+    var tons=Math.round(p*capTons);
+    document.getElementById('hTons').textContent=tons.toLocaleString();
+    document.getElementById('h2pct').textContent=Math.round(p*100);
+    document.getElementById('hTemp').textContent=Math.round(21+p*22);
+
+    var cn=3+Math.round(p*5);
+    var cols=['#3a6ea5','#c0524a','#d99b35','#5a8a52','#7a6aa8','#c47a3a','#4f7f8a','#a05a7a'];
+    var ch='';
+    for(var ci=0;ci<cn;ci++){
+      var cx=70+ci*(660/Math.max(cn-1,1))+(((ci*37)%21)-10);
+      var cy=352+ (ci%2)*54;
+      var sc=cy>380?1.08:0.82;
+      ch+=car(cx,cy,cols[ci%cols.length],sc.toFixed(2));
+    }
+    carsG.innerHTML=ch;
+    var puffOp=p>0.15?(0.25+p*0.55):0;
+    carsG.querySelectorAll('.puff').forEach(function(e){ e.setAttribute('opacity',puffOp.toFixed(2)); });
+
+    document.getElementById('hbgT').setAttribute('stop-color',rgb([L(188,250,p),L(220,210,p),L(238,150,p)]));
+    document.getElementById('hbgM').setAttribute('stop-color',rgb([L(221,248,p),L(233,200,p),L(224,120,p)]));
+    document.getElementById('hbgB').setAttribute('stop-color',rgb([L(236,236,p),L(229,182,p),L(212,110,p)]));
+
+    var sr=40+p*26;
+    var sb=document.getElementById('sunBody');
+    sb.setAttribute('r',sr);
+    sb.setAttribute('fill',rgb([255,L(210,90,p),L(74,40,p)]));
+    document.getElementById('sunHaloC').setAttribute('r',110+p*80);
+    document.getElementById('haloIn').setAttribute('stop-color',rgb([255,L(240,150,p),L(196,70,p)]));
+    rays.setAttribute('opacity',(p*0.85).toFixed(2));
+    rays.setAttribute('stroke',rgb([255,L(206,120,p),L(74,40,p)]));
+    heat.setAttribute('opacity',(p>0.3?(p-0.3)*1.0:0).toFixed(2));
+    cracks.setAttribute('opacity',(p>0.5?(p-0.5)*1.5:0).toFixed(2));
+    document.getElementById('hHill').setAttribute('fill',rgb([L(167,196,p),L(178,150,p),L(119,90,p)]));
+
+    var dark=p>0.62;
+    var tc=dark?'#fff3e4':'#2c2c2a', sc2=dark?'rgba(255,243,228,0.82)':'#5a5750';
+    document.getElementById('hHead').style.color=tc;
+    document.getElementById('hKick').style.color=sc2;
+
+    var msg=document.getElementById('hMsg');
+    if(p<0.4) msg.textContent='등하교 차량이 아직 적게 쌓였습니다. 지금의 통근 습관이 학기말 더위를 결정합니다.';
+    else if(p<0.75) msg.textContent='등하교 차량이 내뿜은 탄소가 열을 가둡니다. 모래가 높아질수록 캠퍼스의 여름이 길어집니다.';
+    else msg.textContent='통근 배출이 병을 채웠고 폭염이 캠퍼스를 덮었습니다. 버스 한 번이 1도를 좌우합니다.';
+  }
+  day.addEventListener('input',render);
+  render();
+})();
+
+/* ============ PANEL 2: DROUGHT / FLOOD ============ */
+(function(){
+  var day=document.getElementById('d3day');
+  var totalDays=105;
+  var jarTop=37, jarBot=296, jarH=jarBot-jarTop;
+  var s3=document.getElementById('s3'), s3w=document.getElementById('s3w'), fall=document.getElementById('s3fall');
+  function L(a,b,p){return Math.round(a+(b-a)*p);}
+  function rgb(c){return 'rgb('+c[0]+','+c[1]+','+c[2]+')';}
+
+  var tk='';
+  for(var i=1;i<9;i++){
+    var ty=jarBot-(jarH*i/10);
+    var lng=(i%5===0);
+    tk+='<line x1="62" y1="'+ty+'" x2="'+(lng?'80':'73')+'" y2="'+ty+'" stroke="rgba(255,255,255,0.82)" stroke-width="'+(lng?2:1.3)+'"/>';
+    tk+='<line x1="'+(lng?'140':'147')+'" y1="'+ty+'" x2="158" y2="'+ty+'" stroke="rgba(255,255,255,0.82)" stroke-width="'+(lng?2:1.3)+'"/>';
+  }
+  document.getElementById('s3ticks').innerHTML=tk;
+
+  for(var i=0;i<7;i++){
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',104+Math.random()*12);
+    c.setAttribute('r',1.4+Math.random()*2);
+    c.setAttribute('fill','#6b62c4');
+    fall.appendChild(c);
+  }
+  var grains=fall.querySelectorAll('circle');
+
+  var dCk=document.getElementById('dCracks');
+  ['M20 420 l52 -32 l44 28 M150 452 l46 -30 l40 26 M270 414 l48 -28 l38 24',
+   'M70 470 l44 -34 M200 474 l46 -36 M320 462 l38 -28',
+   'M10 446 l40 -22 M250 482 l44 -30 M340 438 l36 -24'].forEach(function(dd){
+    var cp=document.createElementNS('http://www.w3.org/2000/svg','path');
+    cp.setAttribute('d',dd); dCk.appendChild(cp);
+  });
+
+  var dDust=document.getElementById('dDust');
+  for(var u=0;u<5;u++){
+    var ux=40+u*80;
+    var e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx',ux);e.setAttribute('cy',360+Math.random()*60);
+    e.setAttribute('rx',38+Math.random()*30);e.setAttribute('ry',12+Math.random()*8);
+    e.setAttribute('fill','#c9b48a');
+    dDust.appendChild(e);
+  }
+
+  var dPlant=document.getElementById('dPlant');
+  [50,135,225,320].forEach(function(x){
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('transform','translate('+x+',300)');
+    g.setAttribute('class','dtree');
+    dPlant.appendChild(g);
+  });
+  var dtrees=dPlant.querySelectorAll('.dtree');
+
+  var fPlant=document.getElementById('fPlant');
+  [445,535,640,745].forEach(function(x){
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('transform','translate('+x+',300)');
+    g.setAttribute('class','ftree');
+    fPlant.appendChild(g);
+  });
+  var ftrees=fPlant.querySelectorAll('.ftree');
+
+  var fClouds=document.getElementById('fClouds');
+  [[470,80],[600,60],[720,90]].forEach(function(c){
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.innerHTML='<ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="56" ry="26" fill="#7d8a96"/><ellipse cx="'+(c[0]-34)+'" cy="'+(c[1]+8)+'" rx="36" ry="20" fill="#8b97a2"/><ellipse cx="'+(c[0]+34)+'" cy="'+(c[1]+8)+'" rx="40" ry="22" fill="#717e8a"/>';
+    fClouds.appendChild(g);
+  });
+
+  var fRain=document.getElementById('fRain');
+  for(var r=0;r<30;r++){
+    var rx=410+Math.random()*380, ry=98+Math.random()*240;
+    var ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',rx);ln.setAttribute('y1',ry);
+    ln.setAttribute('x2',rx-5);ln.setAttribute('y2',ry+16);
+    fRain.appendChild(ln);
+  }
+
+  for(var k=0;k<6;k++){
+    var a=(k*60+30)*Math.PI/180;
+    var dr=document.createElementNS('http://www.w3.org/2000/svg','line');
+    dr.setAttribute('x1',64+Math.cos(a)*40);dr.setAttribute('y1',92+Math.sin(a)*40);
+    dr.setAttribute('x2',64+Math.cos(a)*58);dr.setAttribute('y2',92+Math.sin(a)*58);
+    document.getElementById('dRays').appendChild(dr);
+  }
+  var dHeat=document.getElementById('dHeat');
+  for(var w=0;w<4;w++){
+    var hx=70+w*95;
+    var p1=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p1.setAttribute('d','M'+hx+' 268 q8 -14 0 -28 q-8 -14 0 -28');
+    p1.setAttribute('fill','none');p1.setAttribute('stroke','#e8c98a');p1.setAttribute('stroke-width','2.5');
+    dHeat.appendChild(p1);
+  }
+
+  function render(){
+    var d=+day.value;
+    document.getElementById('d3dayout').textContent=d+'일차';
+    var p=d/totalDays;
+
+    var h=p*jarH, topY=jarBot-h;
+    s3.setAttribute('y',topY); s3.setAttribute('height',h);
+    if(h>3){
+      s3w.setAttribute('d','M55 '+topY+' Q82 '+(topY-6)+' 110 '+topY+' Q138 '+(topY+6)+' 165 '+topY+' L165 '+(topY+9)+' L55 '+(topY+9)+' Z');
+      s3w.setAttribute('opacity','0.9');
+    } else s3w.setAttribute('opacity','0');
+    grains.forEach(function(g){
+      var gy=jarTop+12+Math.random()*(topY-jarTop-14);
+      g.setAttribute('cy',gy>jarTop?gy:jarTop+12);
+      g.setAttribute('opacity', d>0&&d<totalDays?(0.45+Math.random()*0.5).toFixed(2):'0');
+    });
+    document.getElementById('d3pct').textContent=Math.round(p*100);
+
+    document.getElementById('dRainfall').textContent=Math.round(100-p*88);
+    document.getElementById('fRainfall').textContent=Math.round(100+p*185);
+
+    document.getElementById('dSkyT').setAttribute('stop-color',rgb([L(188,236,p),L(220,206,p),L(238,150,p)]));
+    document.getElementById('dSkyB').setAttribute('stop-color',rgb([L(230,242,p),L(236,214,p),L(214,150,p)]));
+    document.getElementById('dGround').setAttribute('fill',rgb([L(134,196,p),L(153,168,p),L(90,108,p)]));
+    document.getElementById('dSun').setAttribute('opacity',(p*0.95).toFixed(2));
+    document.getElementById('dSun').setAttribute('r',30+p*16);
+    document.getElementById('dSun').setAttribute('fill',rgb([255,L(216,150,p),L(99,40,p)]));
+    document.getElementById('dSunHalo').setAttribute('r',76+p*64);
+    document.getElementById('dSunIn').setAttribute('stop-color',rgb([255,L(233,170,p),L(160,60,p)]));
+    document.getElementById('dRays').setAttribute('opacity',(p*0.9).toFixed(2));
+    document.getElementById('dHeat').setAttribute('opacity',(p>0.3?(p-0.3)*1.2:0).toFixed(2));
+    document.getElementById('dCracks').setAttribute('opacity',(p>0.2?(p-0.2)*1.5:0).toFixed(2));
+    document.getElementById('dDust').setAttribute('opacity',(p>0.45?(p-0.45)*0.7:0).toFixed(2));
+    dtrees.forEach(function(g){
+      var st = p<0.3?0 : p<0.6?1 : 2;
+      if(st===0) g.innerHTML='<rect x="-3" y="-24" width="6" height="24" fill="#6b4a2e"/><ellipse cx="0" cy="-34" rx="16" ry="18" fill="#4f8f37"/>';
+      else if(st===1) g.innerHTML='<rect x="-3" y="-24" width="6" height="24" fill="#7a5636"/><ellipse cx="0" cy="-33" rx="13" ry="14" fill="#a89a4a"/><path d="M-8 -22 l-6 8 M8 -28 l7 6" stroke="#9a7a3a" stroke-width="2"/>';
+      else g.innerHTML='<rect x="-3" y="-22" width="6" height="22" fill="#8a6a44"/><path d="M0 -22 l-13 -9 M0 -22 l14 -7 M0 -15 l-11 -12 M0 -17 l12 -11" stroke="#8a6a44" stroke-width="3" fill="none"/>';
+    });
+
+    document.getElementById('fSkyT').setAttribute('stop-color',rgb([L(188,92,p),L(220,104,p),L(238,120,p)]));
+    document.getElementById('fSkyB').setAttribute('stop-color',rgb([L(230,146,p),L(236,154,p),L(214,164,p)]));
+    document.getElementById('fClouds').setAttribute('opacity',(p*1.05>1?1:p*1.05).toFixed(2));
+    document.getElementById('fRain').setAttribute('opacity',(p>0.16?(p-0.16)*1.25:0).toFixed(2));
+    var wh=p*168;
+    document.getElementById('fWater').setAttribute('y',490-wh);
+    document.getElementById('fWater').setAttribute('height',wh);
+    var wy=490-wh;
+    if(wh>4){
+      document.getElementById('fWaveLine').setAttribute('d','M400 '+wy+' q50 -7 100 0 q50 7 100 0 q50 -7 100 0 q50 7 100 0');
+      document.getElementById('fWaveLine').setAttribute('opacity','0.7');
+    } else document.getElementById('fWaveLine').setAttribute('opacity','0');
+    ftrees.forEach(function(g){
+      g.innerHTML='<rect x="-3" y="-24" width="6" height="24" fill="#6b4a2e"/><ellipse cx="0" cy="-34" rx="16" ry="18" fill="#3f7a2e"/>';
+      g.setAttribute('opacity', p>0.6?'0.4':'1');
+    });
+  }
+  day.addEventListener('input',render);
+  render();
+})();
+
+/* ============ PANEL 3: TREES NEEDED ============ */
+(function(){
+  var emit=document.getElementById('temit');
+  var scene=document.getElementById('tScene');
+  var perTree=0.022, capTons=22, CELLS=54;
+
+  function groundY(x){ return 232 - 18*Math.sin((x/800)*Math.PI); }
+
+  var slots=[];
+  var cols=9, rows=6;
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var baseX=70+c*(680/(cols-1));
+      var jitter=((r*13+c*29)%24)-12;
+      var x=baseX+(r%2)*38+jitter;
+      if(x<30)x=30; if(x>780)x=780;
+      var depth=r/(rows-1);
+      var y=groundY(x)+18+depth*186;
+      slots.push({x:x,y:y,depth:depth});
+    }
+  }
+  slots.sort(function(a,b){return a.y-b.y;});
+
+  function tree(s,grown){
+    var sc=0.52+s.depth*0.92;
+    var g='<g transform="translate('+s.x.toFixed(1)+','+s.y.toFixed(1)+') scale('+sc.toFixed(2)+')">';
+    g+='<ellipse cx="2" cy="1" rx="17" ry="5" fill="rgba(60,70,30,0.26)"/>';
+    if(grown){
+      g+='<rect x="-2.6" y="-21" width="5.2" height="21" fill="#6b4a2e"/>';
+      g+='<ellipse cx="0" cy="-32" rx="15" ry="18" fill="#3f7a2e"/>';
+      g+='<ellipse cx="-9" cy="-25" rx="10" ry="12" fill="#4f8f37"/>';
+      g+='<ellipse cx="9" cy="-25" rx="10" ry="12" fill="#356b26"/>';
+      g+='<ellipse cx="0" cy="-42" rx="9" ry="11" fill="#58a03f"/>';
+    } else {
+      g+='<rect x="-1.6" y="-9" width="3.2" height="9" fill="#7a5636"/>';
+      g+='<ellipse cx="0" cy="-12" rx="6" ry="7" fill="#6f9c46"/>';
+      g+='<ellipse cx="-4" cy="-9" rx="4" ry="5" fill="#7faa52"/>';
+      g+='<ellipse cx="4" cy="-9" rx="4" ry="5" fill="#5f8c3a"/>';
+    }
+    g+='</g>';
+    return g;
+  }
+
+  function render(){
+    var t=+emit.value;
+    document.getElementById('temitout').textContent=t+'t';
+    var need=Math.round(t/perTree);
+    document.getElementById('needBig').textContent=need.toLocaleString();
+    document.getElementById('needCount').textContent=need.toLocaleString();
+    var areaM2 = need * 10;
+    document.getElementById('needArea').textContent = (areaM2/420).toFixed(1);
+    document.getElementById('needAreaSub').textContent = '약 ' + areaM2.toLocaleString() + '㎡ · 농구장 기준';
+
+    var p=t/capTons;
+    var grown=Math.min(CELLS,Math.round(p*CELLS));
+    var html='';
+    for(var i=0;i<slots.length;i++){
+      html+=tree(slots[i], i<grown);
+    }
+    scene.innerHTML=html;
+
+    var msg=document.getElementById('tMsg');
+    if(p<0.35) msg.textContent='통근 배출이 적으면 필요한 나무도 적습니다. 오늘의 통근 선택이 이 숲의 크기를 정합니다.';
+    else if(p<0.7) msg.textContent='등하교 차량 배출이 늘수록 그만큼 많은 나무가 1년 내내 우리 대신 숨 쉬어야 합니다.';
+    else msg.textContent='이만큼의 숲을 매년 새로 길러야 합니다 — 통근 배출을 줄이는 쪽이 훨씬 빠릅니다.';
+  }
+  emit.addEventListener('input',render);
+  render();
+})();
+</script>
+</body>
+</html>
